@@ -10,12 +10,16 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
-    libpq-dev  # 🔴 Added for PostgreSQL support
+    libpq-dev
+
+# 🔴 Install Node.js and NPM (Required to build your Vite frontend assets)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y engineering nodejs
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions (🔴 Added pdo_pgsql here)
+# Install PHP extensions
 RUN docker-php-ext-install pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd
 
 # Get latest Composer
@@ -27,8 +31,12 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies
+# Install backend dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# 🔴 Install frontend dependencies and build your assets for production
+RUN npm install
+RUN npm run build
 
 # Set total directory permissions for Nginx user (www-data)
 RUN chown -R www-data:www-data /var/www
