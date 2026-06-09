@@ -29,9 +29,9 @@ COPY . /var/www
 # Install dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# 🔴 ADD THESE TWO LINES HERE TO FIX THE ACCESS DENIED ERROR:
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Set total directory permissions for Nginx user (www-data)
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 755 /var/www
 
 # Setup Nginx configuration
 COPY ./nginx.conf /etc/nginx/sites-available/default
@@ -39,5 +39,5 @@ COPY ./nginx.conf /etc/nginx/sites-available/default
 # Expose port 80
 EXPOSE 80
 
-# Run entrypoint setup
-CMD service nginx start && php-fpm
+# Start PHP-FPM in background and Nginx in foreground
+CMD php-fpm -D && nginx -g "daemon off;"
