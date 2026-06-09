@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doodhwala – Milk Delivery App</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#cbd5e1;margin:0;padding:0}
+.screen{display:none}
+.screen.active{display:block}
+.app-shell{max-width:430px;margin:0 auto;min-height:100vh;background:#f8fafc;position:relative;box-shadow:0 0 60px rgba(0,0,0,.2)}
+.page{display:none;flex-direction:column;overflow-y:auto;padding-bottom:100px}
+.page.active{display:flex}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid #e2e8f0;z-index:50;display:flex;justify-content:space-around;padding:10px 0 14px}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#94a3b8;cursor:pointer;padding:6px 16px;border-radius:12px;transition:color .2s;border:none;background:none;min-width:60px}
+.nav-btn.active{color:#059669}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;background:#059669;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:14px;padding:0 24px;height:52px;cursor:pointer;transition:all .15s;width:100%}
+.btn-primary:active{transform:scale(.97);background:#047857}
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:8px;background:#f0fdf7;color:#059669;font-weight:700;font-size:15px;border:1.5px solid #6ee7b7;border-radius:14px;padding:0 24px;height:52px;cursor:pointer;transition:all .15s;width:100%}
+.btn-secondary:active{transform:scale(.97)}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;border:2px solid transparent}
+.chip:active{transform:scale(.96)}
+.chip-green{background:#dcfce7;color:#15803d;border-color:#86efac}
+.chip-amber{background:#fef9c3;color:#a16207;border-color:#fde047}
+.chip-red{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+.chip-blue{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.delivery-card{background:#fff;border-radius:16px;border:1.5px solid #e2e8f0;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .2s}
+.delivery-card.delivered{border-color:#bbf7d0;background:#f0fdf4}
+.delivery-card.skipped{border-color:#fecaca;background:#fef2f2;opacity:.7}
+.toggle-btn{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all .15s;flex-shrink:0}
+.toggle-btn:active{transform:scale(.88)}
+.toggle-btn.done{background:#059669;box-shadow:0 4px 10px rgba(5,150,105,.3)}
+.toggle-btn.undone{background:#f1f5f9;border:2px solid #e2e8f0}
+.qty-ctrl{display:flex;align-items:center;border:1.5px solid #d1fae5;border-radius:10px;overflow:hidden}
+.qty-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#f0fdf4;border:none;font-size:18px;font-weight:700;color:#059669;cursor:pointer;transition:background .1s;flex-shrink:0}
+.qty-btn:active{background:#dcfce7}
+.qty-val{width:36px;text-align:center;font-size:13px;font-weight:700;color:#0f172a;padding:0;background:#fff;border:none;border-left:1.5px solid #d1fae5;border-right:1.5px solid #d1fae5;outline:none}
+.input-field{width:100%;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:15px;color:#0f172a;background:#fff;outline:none;transition:border .15s;font-family:inherit}
+.input-field:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.1)}
+.lbl{font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;display:block}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-amber{background:#fef9c3;color:#854d0e}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.calendar-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;user-select:none}
+.cal-delivered{background:#dcfce7;color:#15803d}
+.cal-skipped{background:#fee2e2;color:#b91c1c}
+.cal-future{background:#f8fafc;color:#cbd5e1}
+.cal-today{background:#eff6ff;color:#1d4ed8;border:2px solid #3b82f6}
+.drawer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;max-width:430px;left:50%;transform:translateX(-50%)}
+.drawer{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;z-index:101;padding:20px;padding-bottom:32px;display:none}
+.drawer.open,.drawer-overlay.open{display:block}
+.drawer-handle{width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 20px}
+.metric-card{background:#f8fafc;border-radius:14px;padding:14px;border:1px solid #e2e8f0}
+.ledger-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.ledger-row:last-child{border-bottom:none}
+.avatar{width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#15803d;flex-shrink:0}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:700;z-index:200;display:none;white-space:nowrap;max-width:380px}
+</style>
+</head>
+<body>
+
+<!-- ======== PORTAL SELECTOR ======== -->
+<div id="portalScreen" class="screen active">
+  <div class="app-shell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 28px;gap:36px">
+    <div style="text-align:center">
+      <div style="width:88px;height:88px;background:#059669;border-radius:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 12px 32px rgba(5,150,105,.35)">
+        <svg width="46" height="46" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 3H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"/><path d="M4 8v13h16V8"/><circle cx="12" cy="14" r="2"/></svg>
+      </div>
+      <h1 style="font-size:32px;font-weight:800;color:#0f172a;margin:0 0 8px;letter-spacing:-1px">Doodhwala</h1>
+      <p style="font-size:15px;color:#64748b;margin:0">स्मार्ट दूध डिलीवरी मैनेजर</p>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:12px;font-weight:700;color:#94a3b8;text-align:center;letter-spacing:1px;text-transform:uppercase;margin:0">Select your role</p>
+      <button class="btn-primary" style="height:62px;font-size:17px;border-radius:18px" onclick="openPortal('milkman')">
+        <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+        Milkman (Admin)
+      </button>
+      <button class="btn-secondary" style="height:62px;font-size:17px;border-radius:18px" onclick="openPortal('customer')">
+        <svg width="22" height="22" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Customer
+      </button>
+    </div>
+    <p style="font-size:12px;color:#cbd5e1;text-align:center;margin:0">Interactive prototype — all screens functional</p>
+  </div>
+</div>
+
+<!-- ======== MILKMAN PORTAL ======== -->
+<div id="milkmanPortal" class="screen">
+  <div class="app-shell">
+    <!-- Sticky Header -->
+    <div style="background:#fff;border-bottom:1px solid #f1f5f9;position:sticky;top:0;z-index:40">
+      <div style="display:flex;align-items:center;padding:16px 20px 12px;gap:12px">
+        <button onclick="showScreen('portalScreen')" style="width:36px;height:36px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg width="18" height="18" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style="flex:1">
+          <p style="font-size:11px;color:#94a3b8;margin:0;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Milkman Portal</p>
+          <p style="font-size:19px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-.4px" id="pageTitleText">Daily Route</p>
+        </div>
+        <div style="width:40px;height:40px;background:#059669;border-radius:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(5,150,105,.2)">
+          <span style="font-size:13px;font-weight:800;color:#fff">RS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Daily Route -->
+    <div id="pageRoute" class="page active" style="padding:0 16px">
+      <div style="padding:16px 0 10px;display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <p style="font-size:13px;color:#64748b;margin:0;font-weight:500">Monday, 9 June 2025</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <span class="badge badge-green">✓ 9 Delivered</span>
+            <span class="badge badge-amber">⏳ 2 Pending</span>
+            <span class="badge badge-red">— 1 Skipped</span>
+          </div>
+        </div>
+        <button style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:8px 12px;font-size:12px;font-weight:700;color:#059669;cursor:pointer;white-space:nowrap;flex-shrink:0" onclick="openStatusDrawer()">📢 Status</button>
+      </div>
+      <div style="background:#e2e8f0;border-radius:20px;height:7px;margin-bottom:18px;overflow:hidden">
+        <div style="width:75%;background:linear-gradient(90deg,#059669,#34d399);height:100%;border-radius:20px;transition:width .5s"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- Delivered -->
+        <div class="delivery-card delivered" id="dc1">
+          <div style="width:36px;height:36px;background:#059669;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;color:#fff">01</div>
+          <div style="flex:1;min-width:0">
+            <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a">Sharma Ji</p>
+            <p style="margin:1px 0 8px;font-size:12px;color:#64748b">A-12 Green Colony · 1st floor</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐄</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q1a',-.5)">−</button><input class="qty-val" id="q1a" value="1.5" readonly><button class="qty-btn" onclick="changeQty('q1a',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐃</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q1b',-.5)">−</button><input class="qty-val" id="q1b" value="0.5" readonly><button class="qty-btn" onclick="changeQty('q1b',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+            </div>
+          </div>
+          <button class="toggle-btn done" onclick="toggleDelivery('dc1',this)">
+            <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        </div>
+
+        <div class="delivery-card delivered" id="dc2">
+          <div style="width:36px;height:36px;background:#059669;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;color:#fff">02</div>
+          <div style="flex:1;min-width:0">
+            <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a">Verma Aunty</p>
+            <p style="margin:1px 0 8px;font-size:12px;color:#64748b">B-3 Shastri Nagar · Ground</p>
+            <div style="display:flex;gap:10px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐄</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q2a',-.5)">−</button><input class="qty-val" id="q2a" value="2.0" readonly><button class="qty-btn" onclick="changeQty('q2a',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+            </div>
+          </div>
+          <button class="toggle-btn done" onclick="toggleDelivery('dc2',this)">
+            <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        </div>
+
+        <!-- Pending -->
+        <div class="delivery-card" id="dc3">
+          <div style="width:36px;height:36px;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;color:#94a3b8">03</div>
+          <div style="flex:1;min-width:0">
+            <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a">Gupta Family</p>
+            <p style="margin:1px 0 8px;font-size:12px;color:#64748b">C-7 DLF Phase 2 · 2nd floor</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐄</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q3a',-.5)">−</button><input class="qty-val" id="q3a" value="1.0" readonly><button class="qty-btn" onclick="changeQty('q3a',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐃</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q3b',-.5)">−</button><input class="qty-val" id="q3b" value="1.0" readonly><button class="qty-btn" onclick="changeQty('q3b',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+            </div>
+          </div>
+          <button class="toggle-btn undone" onclick="toggleDelivery('dc3',this)">
+            <svg width="22" height="22" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        </div>
+
+        <div class="delivery-card" id="dc4">
+          <div style="width:36px;height:36px;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;color:#94a3b8">04</div>
+          <div style="flex:1;min-width:0">
+            <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a">Tiwari Bhaiya</p>
+            <p style="margin:1px 0 8px;font-size:12px;color:#64748b">Near Hanuman Mandir · Flat 2B</p>
+            <div style="display:flex;gap:10px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:11px;color:#64748b;font-weight:600">🐃</span>
+                <div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('q4a',-.5)">−</button><input class="qty-val" id="q4a" value="2.0" readonly><button class="qty-btn" onclick="changeQty('q4a',.5)">+</button></div>
+                <span style="font-size:11px;color:#64748b">L</span>
+              </div>
+            </div>
+          </div>
+          <button class="toggle-btn undone" onclick="toggleDelivery('dc4',this)">
+            <svg width="22" height="22" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        </div>
+
+        <!-- Vacation hold/skipped -->
+        <div class="delivery-card skipped" id="dc5">
+          <div style="width:36px;height:36px;background:#fee2e2;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;color:#b91c1c">05</div>
+          <div style="flex:1;min-width:0">
+            <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a">Mehta Sahab</p>
+            <p style="margin:1px 0 6px;font-size:12px;color:#64748b">D-1 Old Kathauta · Top floor</p>
+            <span class="badge badge-red">✈ Vacation Hold</span>
+          </div>
+          <button class="toggle-btn" style="background:#fee2e2;border:2px solid #fca5a5;cursor:not-allowed" disabled>
+            <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Status Broadcast -->
+    <div id="pageStatus" class="page" style="padding:0 16px">
+      <div style="padding:16px 0 4px"><p style="font-size:13px;color:#64748b;margin:0">Broadcast real-time updates to all customers</p></div>
+
+      <p class="lbl" style="margin-top:14px">Quick Select</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+        <button class="chip chip-amber" onclick="selectChip(this,'Running 30 min Late ⏰')">⏰ Running 30 min Late</button>
+        <button class="chip chip-red" onclick="selectChip(this,'Not Coming Today ❌')">❌ Not Coming Today</button>
+        <button class="chip chip-green" onclick="selectChip(this,'On the Way 🛵')">🛵 On the Way</button>
+        <button class="chip chip-green" onclick="selectChip(this,'All Deliveries Done ✅')">✅ All Done</button>
+        <button class="chip chip-amber" onclick="selectChip(this,'Coming 1 Hour Late ⏱')">⏱ 1 Hour Late</button>
+        <button class="chip chip-blue" onclick="selectChip(this,'Started Route 🌅')">🌅 Started Route</button>
+      </div>
+
+      <p class="lbl">Custom Message</p>
+      <textarea class="input-field" id="statusMsg" rows="3" placeholder="Type your custom update..." style="resize:none;height:88px;line-height:1.6;margin-bottom:12px">On the Way 🛵</textarea>
+
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;border:1px solid #e2e8f0;margin-bottom:16px">
+        <p style="font-size:12px;color:#64748b;margin:0 0 6px;font-weight:700">📋 WhatsApp Preview</p>
+        <p id="previewMsg" style="font-size:13px;color:#0f172a;margin:0;line-height:1.6;word-break:break-word">*Doodhwala Update* 🥛<br>Status: On the Way 🛵<br>Date: 9 June 2025<br>— Ramesh Sharma (Doodhwala)</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-primary" style="background:#25d366" onclick="shareWhatsApp()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.128.558 4.121 1.531 5.851L.057 23.485l5.733-1.504A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.85 0-3.587-.492-5.089-1.349l-.361-.214-3.414.895.91-3.325-.235-.375A9.966 9.966 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+          Share on WhatsApp
+        </button>
+        <button class="btn-secondary" onclick="copyStatus()">
+          <svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy to Clipboard
+        </button>
+      </div>
+
+      <p class="lbl" style="margin-top:20px">Last Broadcast</p>
+      <div class="card" style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#059669;flex-shrink:0"></div>
+          <div>
+            <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">On the Way 🛵</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8">Today 5:42 AM · Sent to 11 customers</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Billing Ledger -->
+    <div id="pageLedger" class="page" style="padding:0 16px">
+      <div style="padding:16px 0 12px;display:flex;align-items:center;justify-content:space-between">
+        <p style="margin:0;font-size:13px;color:#64748b;font-weight:600">June 2025</p>
+        <span class="badge badge-amber">⚠ Total Due: ₹3,240</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="metric-card" style="background:#f0fdf4;border-color:#bbf7d0">
+          <p style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px">Collected</p>
+          <p style="font-size:24px;font-weight:800;color:#059669;margin:0">₹6,800</p>
+        </div>
+        <div class="metric-card" style="background:#fef2f2;border-color:#fecaca">
+          <p style="font-size:11px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px">Outstanding</p>
+          <p style="font-size:24px;font-weight:800;color:#b91c1c;margin:0">₹3,240</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="padding:14px 16px 0">
+          <p style="margin:0;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.5px;text-transform:uppercase">All Customers</p>
+        </div>
+        <div style="padding:0 16px">
+          <div class="ledger-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar">SR</div>
+              <div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Sharma Ji</p><p style="margin:0;font-size:12px;color:#94a3b8">9 deliveries · 18L</p></div>
+            </div>
+            <div style="text-align:right">
+              <p style="margin:0;font-size:17px;font-weight:800;color:#b91c1c">₹720</p>
+              <button onclick="openPaymentDrawer('Sharma Ji','720')" style="margin-top:4px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;border:none;cursor:pointer;active:scale(.95)">+ Pay</button>
+            </div>
+          </div>
+          <div class="ledger-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="background:#e0e7ff;color:#3730a3">VA</div>
+              <div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Verma Aunty</p><p style="margin:0;font-size:12px;color:#94a3b8">9 deliveries · 18L</p></div>
+            </div>
+            <div style="text-align:right">
+              <p style="margin:0;font-size:17px;font-weight:800;color:#b91c1c">₹1,080</p>
+              <button onclick="openPaymentDrawer('Verma Aunty','1080')" style="margin-top:4px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;border:none;cursor:pointer">+ Pay</button>
+            </div>
+          </div>
+          <div class="ledger-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="background:#fef9c3;color:#854d0e">GF</div>
+              <div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Gupta Family</p><p style="margin:0;font-size:12px;color:#94a3b8">8 deliveries · 16L</p></div>
+            </div>
+            <div style="text-align:right">
+              <p style="margin:0;font-size:17px;font-weight:800;color:#059669">₹0</p>
+              <span class="badge badge-green" style="margin-top:4px;display:inline-block">✓ Paid</span>
+            </div>
+          </div>
+          <div class="ledger-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="background:#fee2e2;color:#991b1b">TB</div>
+              <div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Tiwari Bhaiya</p><p style="margin:0;font-size:12px;color:#94a3b8">7 deliveries · 14L</p></div>
+            </div>
+            <div style="text-align:right">
+              <p style="margin:0;font-size:17px;font-weight:800;color:#b91c1c">₹1,440</p>
+              <button onclick="openPaymentDrawer('Tiwari Bhaiya','1440')" style="margin-top:4px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;border:none;cursor:pointer">+ Pay</button>
+            </div>
+          </div>
+          <div class="ledger-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="background:#f3e8ff;color:#6b21a8">MS</div>
+              <div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Mehta Sahab</p><p style="margin:0;font-size:12px;color:#94a3b8">5 deliveries · 10L</p></div>
+            </div>
+            <div style="text-align:right">
+              <p style="margin:0;font-size:17px;font-weight:800;color:#059669">₹0</p>
+              <span class="badge badge-green" style="margin-top:4px;display:inline-block">✓ Paid</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Milkman Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="mnav-route" onclick="showMilkmanPage('pageRoute','Daily Route','mnav-route')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01M2 12h.01M4 18h.01M9 20.92A10 10 0 1 0 4.93 4.93"/></svg>
+        Route
+      </button>
+      <button class="nav-btn" id="mnav-status" onclick="showMilkmanPage('pageStatus','Broadcast','mnav-status')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.81 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.92 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Broadcast
+      </button>
+      <button class="nav-btn" id="mnav-ledger" onclick="showMilkmanPage('pageLedger','Ledger','mnav-ledger')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Ledger
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ======== CUSTOMER PORTAL ======== -->
+<div id="customerPortal" class="screen">
+  <div class="app-shell">
+    <!-- Header -->
+    <div style="background:#fff;border-bottom:1px solid #f1f5f9;position:sticky;top:0;z-index:40">
+      <div style="display:flex;align-items:center;padding:16px 20px 12px;gap:12px">
+        <button onclick="showScreen('portalScreen')" style="width:36px;height:36px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg width="18" height="18" fill="none" stroke="#475569" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style="flex:1">
+          <p style="font-size:11px;color:#94a3b8;margin:0;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Customer Portal</p>
+          <p style="font-size:19px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-.4px" id="custPageTitle">Overview</p>
+        </div>
+        <div style="width:40px;height:40px;background:#f0fdf4;border:2px solid #d1fae5;border-radius:13px;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:13px;font-weight:800;color:#059669">SR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Customer Dashboard -->
+    <div id="cPage1" class="page active" style="padding:0 16px">
+      <!-- Live Milkman Status Banner -->
+      <div style="margin:16px 0 14px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">🛵</div>
+        <div style="flex:1">
+          <p style="margin:0;font-size:11px;font-weight:700;color:#a16207;letter-spacing:.4px;text-transform:uppercase">Live Status from Ramesh Bhaiya</p>
+          <p style="margin:2px 0 0;font-size:14px;font-weight:700;color:#0f172a">On the Way</p>
+        </div>
+        <p style="margin:0;font-size:11px;color:#92400e;font-weight:500;white-space:nowrap">8 min ago</p>
+      </div>
+
+      <!-- Metric Cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="metric-card" style="background:#fef2f2;border-color:#fecaca">
+          <p style="font-size:11px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px">Pending Due</p>
+          <p style="font-size:26px;font-weight:800;color:#b91c1c;margin:0;line-height:1.1">₹720</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#ef4444;font-weight:600">June 2025</p>
+        </div>
+        <div class="metric-card" style="background:#f0fdf4;border-color:#bbf7d0">
+          <p style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px">Consumed</p>
+          <p style="font-size:26px;font-weight:800;color:#059669;margin:0;line-height:1.1">13.5L</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#16a34a;font-weight:600">This month</p>
+        </div>
+      </div>
+
+      <!-- Weekly breakdown -->
+      <div class="card" style="padding:16px;margin-bottom:14px">
+        <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">This Week</p>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;text-align:center;padding:12px 8px;background:#f0fdf4;border-radius:12px">
+            <div style="font-size:22px;margin-bottom:4px">🐄</div>
+            <p style="margin:0;font-size:20px;font-weight:800;color:#059669;line-height:1">9L</p>
+            <p style="margin:4px 0 0;font-size:11px;color:#64748b;font-weight:600">Cow</p>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 8px;background:#eff6ff;border-radius:12px">
+            <div style="font-size:22px;margin-bottom:4px">🐃</div>
+            <p style="margin:0;font-size:20px;font-weight:800;color:#2563eb;line-height:1">4.5L</p>
+            <p style="margin:4px 0 0;font-size:11px;color:#64748b;font-weight:600">Buffalo</p>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 8px;background:#fef9c3;border-radius:12px">
+            <div style="font-size:22px;margin-bottom:4px">💰</div>
+            <p style="margin:0;font-size:20px;font-weight:800;color:#a16207;line-height:1">₹720</p>
+            <p style="margin:4px 0 0;font-size:11px;color:#64748b;font-weight:600">Due</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="showCustomerPage('cPage2','Delivery Calendar','cnav-cal')" style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;text-align:left;cursor:pointer;transition:all .15s">
+          <div style="font-size:24px;margin-bottom:8px">📅</div>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">View Calendar</p>
+          <p style="margin:2px 0 0;font-size:12px;color:#94a3b8">Delivery history</p>
+        </button>
+        <button onclick="showCustomerPage('cPage3','Advance Requests','cnav-req')" style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;text-align:left;cursor:pointer;transition:all .15s">
+          <div style="font-size:24px;margin-bottom:8px">✏️</div>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">Manage Holds</p>
+          <p style="margin:2px 0 0;font-size:12px;color:#94a3b8">Vacation / Extra</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE: Calendar -->
+    <div id="cPage2" class="page" style="padding:0 16px">
+      <div style="padding:14px 0 10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <p style="margin:0;font-size:13px;color:#64748b;font-weight:500">June 2025 · 9 days delivered</p>
+        <div style="display:flex;gap:6px">
+          <span style="background:#dcfce7;color:#15803d;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">✓ Delivered</span>
+          <span style="background:#fee2e2;color:#b91c1c;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">— Skipped</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px">
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">S</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">M</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">T</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">W</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">T</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">F</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:#94a3b8;padding:4px 0">S</div>
+        </div>
+        <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+      </div>
+
+      <div id="dayPanel" style="margin-top:12px;display:none">
+        <div class="card" style="padding:14px 16px">
+          <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px">June <span id="selDay">1</span>, 2025</p>
+          <div id="dayContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Advance Requests -->
+    <div id="cPage3" class="page" style="padding:0 16px">
+      <div style="padding:14px 0 6px"><p style="font-size:13px;color:#64748b;margin:0">Set vacation holds or request extra milk</p></div>
+
+      <div class="card" style="padding:18px;margin-bottom:16px">
+        <p style="margin:0 0 16px;font-size:15px;font-weight:800;color:#0f172a">New Request</p>
+
+        <p class="lbl">Select Date</p>
+        <input type="date" class="input-field" id="reqDate" style="margin-bottom:16px">
+
+        <p class="lbl">Request Type</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <button id="btnHold" onclick="pickType('hold')" style="padding:14px 10px;border-radius:12px;border:2px solid #fca5a5;background:#fef2f2;cursor:pointer;text-align:center;transition:all .15s">
+            <div style="font-size:20px;margin-bottom:4px">✈</div>
+            <p style="margin:0;font-size:13px;font-weight:700;color:#b91c1c">Vacation Hold</p>
+            <p style="margin:2px 0 0;font-size:11px;color:#94a3b8">Skip (0L)</p>
+          </button>
+          <button id="btnExtra" onclick="pickType('extra')" style="padding:14px 10px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;text-align:center;transition:all .15s">
+            <div style="font-size:20px;margin-bottom:4px">➕</div>
+            <p style="margin:0;font-size:13px;font-weight:700;color:#1d4ed8">Extra Milk</p>
+            <p style="margin:2px 0 0;font-size:11px;color:#94a3b8">Add quantity</p>
+          </button>
+        </div>
+
+        <div id="extraQtyBlock" style="display:none;margin-bottom:16px">
+          <p class="lbl">Extra Cow Milk (L)</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div class="qty-ctrl" style="border-color:#bfdbfe">
+              <button class="qty-btn" style="background:#eff6ff;color:#2563eb" onclick="changeQty('exCow',-.5)">−</button>
+              <input class="qty-val" id="exCow" value="0.5" readonly style="border-color:#bfdbfe">
+              <button class="qty-btn" style="background:#eff6ff;color:#2563eb" onclick="changeQty('exCow',.5)">+</button>
+            </div>
+            <span style="font-size:13px;color:#64748b">liters</span>
+          </div>
+          <p class="lbl">Extra Buffalo Milk (L)</p>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="qty-ctrl" style="border-color:#bfdbfe">
+              <button class="qty-btn" style="background:#eff6ff;color:#2563eb" onclick="changeQty('exBuf',-.5)">−</button>
+              <input class="qty-val" id="exBuf" value="0.0" readonly style="border-color:#bfdbfe">
+              <button class="qty-btn" style="background:#eff6ff;color:#2563eb" onclick="changeQty('exBuf',.5)">+</button>
+            </div>
+            <span style="font-size:13px;color:#64748b">liters</span>
+          </div>
+        </div>
+
+        <p class="lbl">Note for Milkman</p>
+        <textarea class="input-field" id="reqNote" rows="2" placeholder="e.g. Guests coming, please bring extra..." style="resize:none;height:70px;line-height:1.6;margin-bottom:16px"></textarea>
+        <button class="btn-primary" onclick="submitRequest()">Submit Request</button>
+      </div>
+
+      <p class="lbl">Upcoming Requests</p>
+      <div id="reqList" style="display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="padding:14px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">June 15–18, 2025</p>
+              <div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span class="badge badge-red">✈ Vacation Hold</span><span style="font-size:12px;color:#64748b">4 days</span></div>
+            </div>
+            <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer" onclick="this.closest('.card').remove()">Cancel</button>
+          </div>
+        </div>
+        <div class="card" style="padding:14px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">June 22, 2025</p>
+              <div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span class="badge badge-blue">➕ Extra Milk</span><span style="font-size:12px;color:#64748b">+2L Cow · Pooja</span></div>
+            </div>
+            <button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer" onclick="this.closest('.card').remove()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="cnav-dash" onclick="showCustomerPage('cPage1','Overview','cnav-dash')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+      <button class="nav-btn" id="cnav-cal" onclick="showCustomerPage('cPage2','Delivery Calendar','cnav-cal')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendar
+      </button>
+      <button class="nav-btn" id="cnav-req" onclick="showCustomerPage('cPage3','Advance Requests','cnav-req')">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Requests
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ======== DRAWERS ======== -->
+<div class="drawer-overlay" id="ov1" onclick="closeDrawer('dStatus','ov1')"></div>
+<div class="drawer" id="dStatus">
+  <div class="drawer-handle"></div>
+  <p style="font-size:17px;font-weight:800;color:#0f172a;margin:0 0 4px">Quick Status Update</p>
+  <p style="font-size:13px;color:#94a3b8;margin:0 0 16px">Tap to broadcast to all customers</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <button class="chip chip-amber" onclick="quickBroadcast('Running 30 min Late ⏰')">⏰ 30 Min Late</button>
+    <button class="chip chip-red" onclick="quickBroadcast('Not Coming Today ❌')">❌ Not Coming</button>
+    <button class="chip chip-green" onclick="quickBroadcast('On the Way 🛵')">🛵 On the Way</button>
+    <button class="chip chip-green" onclick="quickBroadcast('All Done ✅')">✅ All Done</button>
+    <button class="chip chip-blue" onclick="quickBroadcast('Started Route 🌅')">🌅 Started Route</button>
+  </div>
+  <button class="btn-secondary" onclick="closeDrawer('dStatus','ov1');showMilkmanPage('pageStatus','Broadcast','mnav-status')">Open Full Broadcast Panel →</button>
+</div>
+
+<div class="drawer-overlay" id="ov2" onclick="closeDrawer('dPay','ov2')"></div>
+<div class="drawer" id="dPay">
+  <div class="drawer-handle"></div>
+  <p style="font-size:17px;font-weight:800;color:#0f172a;margin:0 0 2px">Add Cash Payment</p>
+  <p id="payName" style="font-size:13px;color:#64748b;margin:0 0 18px"></p>
+  <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;color:#64748b;font-weight:600">Outstanding Amount</span>
+    <span id="payDue" style="font-size:22px;font-weight:800;color:#b91c1c"></span>
+  </div>
+  <p class="lbl">Amount Received (₹)</p>
+  <input class="input-field" type="number" id="payAmt" placeholder="0" style="margin-bottom:12px;font-size:22px;font-weight:800;text-align:center" inputmode="numeric">
+  <p class="lbl">Payment Mode</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+    <button id="m1" class="chip chip-green" style="justify-content:center;border-radius:12px;height:44px" onclick="pickMode('cash')">💵 Cash</button>
+    <button id="m2" class="chip" style="justify-content:center;border-radius:12px;height:44px;background:#eff6ff;color:#1d4ed8;border-color:#93c5fd" onclick="pickMode('upi')">📱 UPI / GPay</button>
+  </div>
+  <button class="btn-primary" onclick="recordPay()">Record Payment</button>
+</div>
+
+<div id="toast">✓ Done!</div>
+
+<script>
+// ===== SCREEN ROUTING =====
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function openPortal(t){showScreen(t==='milkman'?'milkmanPortal':'customerPortal');if(t==='customer')buildCal();}
+
+// ===== MILKMAN PAGES =====
+function showMilkmanPage(pid,title,nid){
+  document.querySelectorAll('#milkmanPortal .page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  document.getElementById('pageTitleText').textContent=title;
+  document.querySelectorAll('#milkmanPortal .nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(nid).classList.add('active');
+}
+function showCustomerPage(pid,title,nid){
+  document.querySelectorAll('#customerPortal .page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  document.getElementById('custPageTitle').textContent=title;
+  document.querySelectorAll('#customerPortal .nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(nid).classList.add('active');
+  if(pid==='cPage2')buildCal();
+}
+
+// ===== DELIVERY TOGGLE =====
+function toggleDelivery(id,btn){
+  const card=document.getElementById(id);
+  if(btn.classList.contains('done')){
+    btn.classList.replace('done','undone');
+    btn.querySelector('svg').setAttribute('stroke','#cbd5e1');
+    btn.style.background='';btn.style.boxShadow='';
+    card.classList.remove('delivered');
+  }else{
+    btn.classList.replace('undone','done');
+    btn.querySelector('svg').setAttribute('stroke','#fff');
+    btn.style.background='#059669';btn.style.boxShadow='0 4px 10px rgba(5,150,105,.3)';
+    card.classList.add('delivered');
+    toast('Delivery marked ✓');
+  }
+}
+
+// ===== QTY =====
+function changeQty(id,d){
+  const el=document.getElementById(id);
+  const v=Math.max(0,Math.round((parseFloat(el.value||0)+d)*10)/10);
+  el.value=v.toFixed(1);
+}
+
+// ===== STATUS =====
+function selectChip(el,txt){document.getElementById('statusMsg').value=txt;updatePreview(txt);}
+document.addEventListener('DOMContentLoaded',()=>{
+  const sm=document.getElementById('statusMsg');
+  if(sm)sm.addEventListener('input',function(){updatePreview(this.value);});
+});
+function updatePreview(t){
+  const el=document.getElementById('previewMsg');
+  if(el)el.innerHTML='*Doodhwala Update* 🥛<br>Status: '+t+'<br>Date: 9 June 2025<br>— Ramesh Sharma (Doodhwala)';
+}
+function shareWhatsApp(){
+  const t=document.getElementById('statusMsg').value;
+  const msg=encodeURIComponent('*Doodhwala Update* 🥛\nStatus: '+t+'\nDate: 9 June 2025\n— Ramesh Sharma (Doodhwala)');
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+function copyStatus(){
+  const t=document.getElementById('statusMsg').value;
+  const msg='*Doodhwala Update* 🥛\nStatus: '+t+'\n— Ramesh Sharma (Doodhwala)';
+  navigator.clipboard?navigator.clipboard.writeText(msg).then(()=>toast('Copied!')):toast('Copied!');
+}
+
+// ===== DRAWERS =====
+function openStatusDrawer(){document.getElementById('dStatus').classList.add('open');document.getElementById('ov1').classList.add('open');}
+function closeDrawer(d,o){document.getElementById(d).classList.remove('open');document.getElementById(o).classList.remove('open');}
+function quickBroadcast(t){
+  const sm=document.getElementById('statusMsg');
+  if(sm)sm.value=t;
+  updatePreview(t);
+  closeDrawer('dStatus','ov1');
+  toast('Status broadcast: '+t.split(' ')[0]+' '+t.split(' ')[1]);
+}
+function openPaymentDrawer(name,amt){
+  document.getElementById('payName').textContent=name;
+  document.getElementById('payDue').textContent='₹'+amt;
+  document.getElementById('payAmt').value='';
+  document.getElementById('dPay').classList.add('open');
+  document.getElementById('ov2').classList.add('open');
+}
+function pickMode(m){
+  document.getElementById('m1').style.cssText=m==='cash'?'justify-content:center;border-radius:12px;height:44px;background:#dcfce7;color:#15803d;border:2px solid #86efac':'justify-content:center;border-radius:12px;height:44px;background:#f8fafc;color:#94a3b8;border:2px solid #e2e8f0';
+  document.getElementById('m2').style.cssText=m==='upi'?'justify-content:center;border-radius:12px;height:44px;background:#dbeafe;color:#1d4ed8;border:2px solid #93c5fd':'justify-content:center;border-radius:12px;height:44px;background:#f8fafc;color:#94a3b8;border:2px solid #e2e8f0';
+}
+function recordPay(){
+  const amt=document.getElementById('payAmt').value;
+  if(!amt||parseFloat(amt)<=0){document.getElementById('payAmt').style.borderColor='#ef4444';return;}
+  closeDrawer('dPay','ov2');
+  toast('₹'+parseInt(amt).toLocaleString()+' payment recorded!');
+}
+
+// ===== CALENDAR =====
+const calData={1:{c:1.5,b:0.5,d:1},2:{c:1.5,b:0,d:1},3:{c:1.5,b:0.5,d:1},4:{c:0,b:0,d:0},5:{c:1.5,b:0.5,d:1},6:{c:1.5,b:0,d:1},7:{c:1.5,b:0.5,d:1},8:{c:1.5,b:0.5,d:1},9:{c:1.5,b:0.5,d:1}};
+function buildCal(){
+  const g=document.getElementById('calGrid');
+  if(!g||g.children.length>0)return;
+  g.innerHTML='';
+  for(let i=0;i<0;i++){const e=document.createElement('div');g.appendChild(e);}  // June 1 2025 = Sunday (col 0)
+  for(let d=1;d<=30;d++){
+    const el=document.createElement('div');
+    const row=calData[d];
+    const today=d===9;
+    if(today){el.className='calendar-cell cal-today';el.innerHTML='<span style="font-size:12px;font-weight:800">'+d+'</span><span style="font-size:9px;font-weight:800;margin-top:1px">NOW</span>';}
+    else if(d>9){el.className='calendar-cell cal-future';el.innerHTML='<span style="font-size:12px">'+d+'</span>';}
+    else if(row&&row.d){const t=(row.c+row.b).toFixed(1);el.className='calendar-cell cal-delivered';el.innerHTML='<span style="font-size:12px;font-weight:800">'+d+'</span><span style="font-size:9px;font-weight:800;margin-top:1px">'+t+'L</span>';}
+    else{el.className='calendar-cell cal-skipped';el.innerHTML='<span style="font-size:12px;font-weight:800">'+d+'</span><span style="font-size:9px;margin-top:1px">—</span>';}
+    el.onclick=()=>showDay(d,row,today);
+    g.appendChild(el);
+  }
+}
+function showDay(d,row,today){
+  document.getElementById('selDay').textContent=d;
+  const c=document.getElementById('dayContent');
+  const panel=document.getElementById('dayPanel');
+  if(today){c.innerHTML='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">🛵</span><div><p style="margin:0;font-size:14px;font-weight:700;color:#1d4ed8">Delivery in progress today</p><p style="margin:2px 0 0;font-size:12px;color:#64748b">Milkman is on the way</p></div></div>';}
+  else if(!row||d>9){c.innerHTML='<p style="margin:0;font-size:14px;color:#94a3b8">No delivery data yet.</p>';}
+  else if(!row.d){c.innerHTML='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">❌</span><div><p style="margin:0;font-size:14px;font-weight:700;color:#b91c1c">No Delivery</p><p style="margin:2px 0 0;font-size:12px;color:#64748b">Milkman was on leave / holiday</p></div></div>';}
+  else{const t=(row.c+row.b).toFixed(1);c.innerHTML='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">✅</span><div><p style="margin:0;font-size:14px;font-weight:700;color:#059669">Delivered · '+t+'L total</p><p style="margin:2px 0 0;font-size:12px;color:#64748b">🐄 Cow: '+row.c+'L &nbsp;·&nbsp; 🐃 Buffalo: '+row.b+'L</p></div></div>';}
+  panel.style.display='block';
+}
+
+// ===== ADVANCE REQUESTS =====
+let reqType='hold';
+function pickType(t){
+  reqType=t;
+  document.getElementById('btnHold').style.cssText=t==='hold'?'padding:14px 10px;border-radius:12px;border:2px solid #ef4444;background:#fef2f2;cursor:pointer;text-align:center;box-shadow:0 0 0 3px rgba(239,68,68,.15)':'padding:14px 10px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;text-align:center';
+  document.getElementById('btnExtra').style.cssText=t==='extra'?'padding:14px 10px;border-radius:12px;border:2px solid #3b82f6;background:#eff6ff;cursor:pointer;text-align:center;box-shadow:0 0 0 3px rgba(59,130,246,.15)':'padding:14px 10px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;text-align:center';
+  document.getElementById('extraQtyBlock').style.display=t==='extra'?'block':'none';
+}
+function submitRequest(){
+  const dt=document.getElementById('reqDate').value;
+  if(!dt){document.getElementById('reqDate').style.borderColor='#ef4444';return;}
+  const list=document.getElementById('reqList');
+  const item=document.createElement('div');
+  item.className='card';item.style.padding='14px 16px';
+  const lbl=reqType==='hold'?'<span class="badge badge-red">✈ Vacation Hold</span>':'<span class="badge badge-blue">➕ Extra Milk</span>';
+  item.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a">'+dt+'</p><div style="margin-top:5px">'+lbl+'</div></div><button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer" onclick="this.closest(\'.card\').remove()">Cancel</button></div>';
+  list.prepend(item);
+  document.getElementById('reqDate').value='';
+  toast('Request submitted ✓');
+}
+
+// ===== TOAST =====
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2400);}
+
+// Init
+document.addEventListener('DOMContentLoaded',()=>{
+  const d=new Date();
+  const dateStr=d.toISOString().split('T')[0];
+  const ri=document.getElementById('reqDate');
+  if(ri)ri.min=dateStr;
+});
+</script>
+</body>
+</html>

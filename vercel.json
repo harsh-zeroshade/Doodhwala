@@ -1,0 +1,29 @@
+{
+    "framework": null,
+    "functions": {
+        "api/index.php": {
+            "runtime": "vercel-php@0.6.0",
+            "maxDuration": 30
+        }
+    },
+    "installCommand": "composer install --no-dev --optimize-autoloader && npm install",
+    "buildCommand": "npm run build",
+    "routes": [
+        {
+            "src": "/build/(.*)",
+            "dest": "/public/build/$1"
+        },
+        {
+            "src": "/favicon\\.ico",
+            "dest": "/public/favicon.ico"
+        },
+        {
+            "src": "/robots\\.txt",
+            "dest": "/public/robots.txt"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        }
+    ]
+}
